@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binary Formatter Demo (Comments + Dynamic Contrast)</title>
+    <link rel="stylesheet" href="src/styles/main.css" />
+  </head>
+  <body>
+    <div id="app-container">
+      <div class="header-area">
+        <h1>32-bit Binary Formatter</h1>
+        <div class="theme-switch-wrapper">
+          <span class="theme-label" id="theme-label-text">Dark Mode</span>
+          <label class="theme-switch" for="theme-checkbox">
+            <input type="checkbox" id="theme-checkbox" />
+            <div class="slider round"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="decimalInput">Decimal Number (0 - 4,294,967,295):</label>
+          <input type="number" id="decimalInput" min="0" max="4294967295" />
+        </div>
+
+        <div class="input-group">
+          <label for="textColorInput"
+            >Text Color (Non-Shaded / Dark Mode):</label
+          >
+          <div style="display: flex; align-items: center; gap: 0.5rem">
+            <input type="color" id="textColorInput" />
+            <span id="textColorValue" class="color-value-display"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-controls-container">
+        <h3>Segment Highlighting:</h3>
+        <div class="highlight-grid">
+          <div class="segment-control-block">
+            <div class="segment-header">
+              <label for="enableHighlight0">Segment 0</label>
+              <input
+                type="checkbox"
+                id="enableHighlight0"
+                data-index="0"
+                class="highlight-enable-checkbox"
+              />
+            </div>
+            <select
+              id="presetColors0"
+              data-index="0"
+              class="preset-color-select"
+            ></select>
+          </div>
+          <div class="segment-control-block">
+            <div class="segment-header">
+              <label for="enableHighlight1">Segment 1</label>
+              <input
+                type="checkbox"
+                id="enableHighlight1"
+                data-index="1"
+                class="highlight-enable-checkbox"
+              />
+            </div>
+            <select
+              id="presetColors1"
+              data-index="1"
+              class="preset-color-select"
+            ></select>
+          </div>
+          <div class="segment-control-block">
+            <div class="segment-header">
+              <label for="enableHighlight2">Segment 2</label>
+              <input
+                type="checkbox"
+                id="enableHighlight2"
+                data-index="2"
+                class="highlight-enable-checkbox"
+              />
+            </div>
+            <select
+              id="presetColors2"
+              data-index="2"
+              class="preset-color-select"
+            ></select>
+          </div>
+          <div class="segment-control-block">
+            <div class="segment-header">
+              <label for="enableHighlight3">Segment 3</label>
+              <input
+                type="checkbox"
+                id="enableHighlight3"
+                data-index="3"
+                class="highlight-enable-checkbox"
+              />
+            </div>
+            <select
+              id="presetColors3"
+              data-index="3"
+              class="preset-color-select"
+            ></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="example-container">
+        <label>Example Function Call:</label>
+        <div id="functionCallExample" class="code-block"></div>
+      </div>
+
+      <div class="output-container">
+        <label>Formatted Output:</label>
+        <div class="output-display">
+          <div id="output"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      /**
+       * @typedef {object} FormatBinaryConfig Configuration for formatting the binary number.
+       * @property {number} number - The decimal number to convert (required).
+       * @property {(string|null)[]} [segmentColors=[null, null, null, null]] - Array of 4 preset IDs (or null) indicating highlight color.
+       * @property {string} textColor - CSS color string for the binary digits (used as base, may be overridden for contrast).
+       */
+
+      // --- Constants ---
+      const MIN_UINT32 = 0;
+      const MAX_UINT32 = 4294967295; // 2^32 - 1
+      const MIN_CONTRAST_RATIO = 4.5; // WCAG AA minimum contrast for normal text
+
+      // --- Preset Color Definitions with IDs ---
+      const presetPalettes = {
+        "Light Mode": [
+          // Contrast checked against #000000 (black text)
+          {
+            name: "Light Red",
+            value: "#FFADAD",
+            textColor: "#000000",
+            id: "light-red",
+          }, // >= 10:1
+          {
+            name: "Light Orange",
+            value: "#FFD6A5",
+            textColor: "#000000",
+            id: "light-orange",
+          }, // >= 12:1
+          {
+            name: "Light Yellow",
+            value: "#FDFFB6",
+            textColor: "#000000",
+            id: "light-yellow",
+          }, // >= 14:1
+          {
+            name: "Light Green",
+            value: "#CAFFBF",
+            textColor: "#000000",
+            id: "light-green",
+          }, // >= 13:1
+          {
+            name: "Light Blue",
+            value: "#A0C4FF",
+            textColor: "#000000",
+            id: "light-blue",
+          }, // >= 10:1
+          {
+            name: "Light Purple",
+            value: "#BDB2FF",
+            textColor: "#000000",
+            id: "light-purple",
+          }, // >= 9.9:1
+          {
+            name: "Light Gray",
+            value: "#E0E0E0",
+            textColor: "#000000",
+            id: "light-gray",
+          }, // >= 13:1
+        ],
+        "Dark Mode": [
+          // Contrast checked against #e2e8f0 (light text) -> Target >= 8:1
+          {
+            name: "Dark Red",
+            value: "#B71C1C",
+            textColor: "#FFFFFF",
+            id: "dark-red",
+          }, // ~8.1:1
+          {
+            name: "Dark Brown",
+            value: "#5D4037",
+            textColor: "#FFFFFF",
+            id: "dark-brown",
+          }, // ~8.0:1
+          {
+            name: "Dark Gold",
+            value: "#604506",
+            textColor: "#FFFFFF",
+            id: "dark-gold",
+          }, // ~8.2:1
+          {
+            name: "V. Dark Teal",
+            value: "#004D40",
+            textColor: "#FFFFFF",
+            id: "dark-teal",
+          }, // ~9.4:1
+          {
+            name: "Dark Indigo",
+            value: "#1A237E",
+            textColor: "#FFFFFF",
+            id: "dark-indigo",
+          }, // ~11.9:1
+          {
+            name: "Dark Violet",
+            value: "#4A148C",
+            textColor: "#FFFFFF",
+            id: "dark-violet",
+          }, // ~10.5:1
+          {
+            name: "V. Dark Gray",
+            value: "#424242",
+            textColor: "#FFFFFF",
+            id: "dark-gray",
+          }, // ~9.5:1
+        ],
+      };
+
+      // --- ID to Hex Color Lookup Map ---
+      let presetIdToHexMap = {};
+      /**
+       * Builds the map for quick preset ID to Hex color lookup.
+       * Should be called once on initialization.
+       */
+      function buildPresetMap() {
+        presetIdToHexMap = {}; // Clear map
+        for (const groupName in presetPalettes) {
+          presetPalettes[groupName].forEach((color) => {
+            if (color.id) {
+              // Ensure id exists
+              presetIdToHexMap[color.id] = color.value; // Map id to hex value
+            }
+          });
+        }
+      }
+
+      // --- Contrast Calculation Utilities ---
+
+      /**
+       * Calculates the relative luminance of a hex color.
+       * @param {string} hexColor - Color in #RRGGBB format.
+       * @returns {number} Relative luminance (0-1).
+       */
+      function getLuminance(hexColor) {
+        const rgb = parseInt(hexColor.slice(1), 16); // Convert hex to integer
+        const r = (rgb >> 16) & 0xff;
+        const g = (rgb >> 8) & 0xff;
+        const b = (rgb >> 0) & 0xff;
+
+        const sR = r / 255;
+        const sG = g / 255;
+        const sB = b / 255;
+
+        const linR =
+          sR <= 0.03928 ? sR / 12.92 : Math.pow((sR + 0.055) / 1.055, 2.4);
+        const linG =
+          sG <= 0.03928 ? sG / 12.92 : Math.pow((sG + 0.055) / 1.055, 2.4);
+        const linB =
+          sB <= 0.03928 ? sB / 12.92 : Math.pow((sB + 0.055) / 1.055, 2.4);
+
+        return 0.2126 * linR + 0.7152 * linG + 0.0722 * linB;
+      }
+
+      /**
+       * Calculates the contrast ratio between two relative luminances.
+       * @param {number} lum1 - Luminance of the first color.
+       * @param {number} lum2 - Luminance of the second color.
+       * @returns {number} Contrast ratio.
+       */
+      function getContrastRatio(lum1, lum2) {
+        const lighter = Math.max(lum1, lum2);
+        const darker = Math.min(lum1, lum2);
+        return (lighter + 0.05) / (darker + 0.05);
+      }
+
+      /**
+       * Converts a decimal number to a 32-bit binary string based on a config object.
+       * Uses preset IDs for segment colors and looks up the hex value.
+       * Dynamically adjusts text color on shaded segments for better contrast if needed.
+       * @param {FormatBinaryConfig} config - The configuration object.
+       * @returns {string} An HTML string of the formatted binary number, or an error message string.
+       */
+      function formatBinary(config) {
+        if (typeof config?.number !== "number") {
+          return '<span class="error-message">Error: Invalid number passed.</span>';
+        }
+        const {
+          number,
+          segmentColors = [null, null, null, null],
+          textColor,
+        } = config;
+
+        // Determine the base text color (from picker or theme default CSS variable)
+        const baseTextColor =
+          textColor ||
+          getComputedStyle(document.body)
+            .getPropertyValue("--text-color")
+            .trim();
+        const baseTextLuminance = getLuminance(baseTextColor);
+        const isBaseTextLight = baseTextLuminance > 0.5; // Heuristic to check if base text is light or dark
+
+        const unsignedInt = number >>> 0;
+        const binaryString = unsignedInt.toString(2).padStart(32, "0");
+        const segments = binaryString.match(/.{1,8}/g) || [];
+
+        const styledSegments = segments.map((segment, index) => {
+          const presetId = Array.isArray(segmentColors)
+            ? segmentColors[index]
+            : null;
+          const highlightColor = presetId ? presetIdToHexMap[presetId] : null; // Get hex from ID map
+
+          let segmentTextColor = baseTextColor; // Start with the base/picker color
+
+          // --- Dynamic Contrast Adjustment for Shaded Segments ---
+          if (highlightColor) {
+            try {
+              const highlightLuminance = getLuminance(highlightColor);
+              const contrastRatio = getContrastRatio(
+                baseTextLuminance,
+                highlightLuminance
+              );
+
+              // If contrast is below threshold, flip the text color
+              if (contrastRatio < MIN_CONTRAST_RATIO) {
+                segmentTextColor = isBaseTextLight ? "#000000" : "#FFFFFF"; // Flip to black or white
+                console.log(
+                  `Low contrast (${contrastRatio.toFixed(
+                    2
+                  )}) on segment ${index}. Flipped text to ${segmentTextColor}`
+                );
+              }
+            } catch (e) {
+              console.error(
+                "Error calculating contrast, using base text color.",
+                e
+              );
+              // Fallback to base text color if calculation fails
+              segmentTextColor = baseTextColor;
+            }
+          }
+          // --- End Dynamic Contrast Adjustment ---
+
+          let style = `color: ${segmentTextColor};`;
+          if (highlightColor) {
+            style += ` background-color: ${highlightColor};`;
+          }
+          return `<span style="${style}">${segment}</span>`;
+        });
+        return styledSegments.join(" ");
+      }
+
+      // --- DOM Element References ---
+      const decimalInputElement = document.getElementById("decimalInput");
+      const textColorInputElement = document.getElementById("textColorInput");
+      const outputElement = document.getElementById("output");
+      const textColorValueElement = document.getElementById("textColorValue");
+      const functionCallExampleElement = document.getElementById(
+        "functionCallExample"
+      );
+      const highlightEnableCheckboxes = document.querySelectorAll(
+        ".highlight-enable-checkbox"
+      );
+      const presetColorSelects = document.querySelectorAll(
+        ".preset-color-select"
+      );
+      const themeCheckbox = document.getElementById("theme-checkbox");
+      const themeLabel = document.getElementById("theme-label-text");
+
+      /**
+       * Populates a single preset color dropdown, setting option value to preset ID.
+       * @param {HTMLSelectElement} selectElement - The dropdown element.
+       */
+      function populatePresetDropdown(selectElement) {
+        selectElement.innerHTML = "";
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Select Preset...";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        selectElement.appendChild(defaultOption);
+        for (const groupName in presetPalettes) {
+          const optgroup = document.createElement("optgroup");
+          optgroup.label = groupName;
+          presetPalettes[groupName].forEach((color) => {
+            const option = document.createElement("option");
+            option.value = color.id; // Use ID as the value
+            option.textContent = color.name;
+            option.style.backgroundColor = color.value; // Style uses hex
+            option.style.color = color.textColor || "inherit";
+            optgroup.appendChild(option);
+          });
+          selectElement.appendChild(optgroup);
+        }
+      }
+
+      /**
+       * Handles checkbox change event for segment highlighting
+       * @param {Event} event - The checkbox change event
+       */
+      function handleHighlightCheckboxChange(event) {
+        const checkbox = event.target;
+        const index = checkbox.dataset.index;
+        const selectElement = document.getElementById(`presetColors${index}`);
+
+        if (checkbox.checked) {
+          // Show the select box
+          selectElement.classList.add("visible");
+          // Select the first color from the current theme
+          const currentTheme = document.body.classList.contains("light-mode")
+            ? "Light Mode"
+            : "Dark Mode";
+          const firstColor = presetPalettes[currentTheme][0];
+          if (firstColor) {
+            selectElement.value = firstColor.id;
+          }
+        } else {
+          // Hide the select box
+          selectElement.classList.remove("visible");
+          selectElement.value = "";
+        }
+
+        updateOutput();
+      }
+
+      /**
+       * Reads UI controls, validates number input, creates config object with preset IDs,
+       * calls formatBinary, and updates the output display and example code display.
+       */
+      function updateOutput() {
+        // --- Input Validation ---
+        let isValidNumber = false;
+        let decimalNumber = NaN;
+        const rawValue = decimalInputElement.value;
+
+        if (rawValue.trim() !== "") {
+          const parsedValue = parseInt(rawValue, 10);
+          if (
+            !isNaN(parsedValue) &&
+            parsedValue >= MIN_UINT32 &&
+            parsedValue <= MAX_UINT32 &&
+            String(parsedValue) === rawValue.trim()
+          ) {
+            decimalNumber = parsedValue;
+            isValidNumber = true;
+            decimalInputElement.classList.remove("input-error");
+          }
+        }
+
+        if (!isValidNumber) {
+          outputElement.innerHTML = `<span class="error-message">Please enter a valid integer between ${MIN_UINT32} and ${MAX_UINT32}.</span>`;
+          functionCallExampleElement.textContent = "// Invalid input number";
+          decimalInputElement.classList.add("input-error");
+          return;
+        }
+        // --- End Validation ---
+
+        // --- Proceed if Valid ---
+        const textColor = textColorInputElement.value;
+        textColorValueElement.textContent = textColor;
+
+        const segmentHighlightIds = [];
+        highlightEnableCheckboxes.forEach((checkbox) => {
+          const index = checkbox.dataset.index;
+          const presetSelect = document.getElementById(`presetColors${index}`);
+          segmentHighlightIds[index] =
+            checkbox.checked && presetSelect.value ? presetSelect.value : null;
+        });
+
+        /** @type {FormatBinaryConfig} */
+        const config = {
+          number: decimalNumber,
+          segmentColors: segmentHighlightIds,
+          textColor: textColor,
+        };
+        const formattedHtml = formatBinary(config); // formatBinary now handles contrast adjustment
+        outputElement.innerHTML = formattedHtml;
+
+        const configString = JSON.stringify(
+          config,
+          (key, value) => {
+            if (key === "segmentColors") {
+              return value.map((id) => (id === null ? null : String(id)));
+            }
+            return value;
+          },
+          2
+        );
+
+        // Example code display
+        const exampleCallString = `// Configuration Object (Part A - using Preset IDs):
+const config = ${configString};
+
+// Function Call (Part B):
+const binaryString = formatBinary(config);
+
+// Real-world example: Checking if a number is a power of 2
+function isPowerOfTwo(number) {
+  const binary = formatBinary({ number });
+  // A power of 2 has exactly one '1' bit
+  return binary.match(/1/g).length === 1;
+}
+
+// Usage example:
+const number = 16;
+if (isPowerOfTwo(number)) {
+  console.log(\`\${number} is a power of 2\`);
+}`;
+
+        functionCallExampleElement.textContent = exampleCallString;
+      }
+
+      /**
+       * Applies the selected theme (light/dark) to the body, updates the label,
+       * sets the default text color picker value, and saves the preference to localStorage.
+       * @param {boolean} isLight - True if light mode should be applied, false for dark.
+       */
+      function applyTheme(isLight) {
+        const defaultTextColor = isLight ? "#000000" : "#e2e8f0"; // Black for light, light gray for dark
+        textColorInputElement.value = defaultTextColor; // Update the picker value to the theme default
+
+        if (isLight) {
+          document.body.classList.add("light-mode");
+          themeLabel.textContent = "Light Mode";
+          localStorage.setItem("theme", "light");
+        } else {
+          document.body.classList.remove("light-mode");
+          themeLabel.textContent = "Dark Mode";
+          localStorage.setItem("theme", "dark");
+        }
+        // Update the output display after changing the theme and default text color
+        updateOutput();
+      }
+
+      // --- Event Listeners ---
+      // Update output when number input changes
+      decimalInputElement.addEventListener("input", updateOutput);
+      // Update output when text color picker changes
+      textColorInputElement.addEventListener("input", updateOutput);
+
+      // Update output when highlight enable checkbox changes
+      highlightEnableCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", handleHighlightCheckboxChange);
+      });
+
+      // Update output when preset color selection changes
+      presetColorSelects.forEach((select) => {
+        select.addEventListener("change", (event) => {
+          updateOutput();
+        });
+      });
+
+      // Apply theme when theme switch changes
+      themeCheckbox.addEventListener("change", (event) => {
+        applyTheme(event.target.checked);
+        // Update all visible select boxes to use the first color of the new theme
+        highlightEnableCheckboxes.forEach((checkbox) => {
+          if (checkbox.checked) {
+            const index = checkbox.dataset.index;
+            const selectElement = document.getElementById(
+              `presetColors${index}`
+            );
+            const currentTheme = event.target.checked
+              ? "Light Mode"
+              : "Dark Mode";
+            const firstColor = presetPalettes[currentTheme][0];
+            if (firstColor) {
+              selectElement.value = firstColor.id;
+            }
+          }
+        });
+        updateOutput();
+      });
+
+      // --- Initial Setup ---
+      /**
+       * Initializes the application UI on page load.
+       */
+      function initializeUI() {
+        buildPresetMap(); // Create the ID -> Hex map
+        presetColorSelects.forEach(populatePresetDropdown); // Fill dropdowns
+
+        // Ensure all checkboxes are off and select boxes are hidden
+        highlightEnableCheckboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+          const index = checkbox.dataset.index;
+          const selectElement = document.getElementById(`presetColors${index}`);
+          selectElement.classList.remove("visible");
+          selectElement.value = "";
+        });
+
+        // Set Random Default Number
+        const randomNum = Math.floor(Math.random() * (MAX_UINT32 + 1));
+        decimalInputElement.value = randomNum;
+
+        // Load Theme and Set Initial Text Color
+        const savedTheme = localStorage.getItem("theme");
+        const prefersLight = savedTheme === "light";
+        themeCheckbox.checked = prefersLight; // Set switch state
+        const initialTextColor = prefersLight ? "#000000" : "#e2e8f0";
+        textColorInputElement.value = initialTextColor; // Set color picker value
+        // Apply theme class and label
+        if (prefersLight) {
+          document.body.classList.add("light-mode");
+          themeLabel.textContent = "Light Mode";
+        } else {
+          document.body.classList.remove("light-mode");
+          themeLabel.textContent = "Dark Mode";
+        }
+
+        // Initial Render
+        updateOutput();
+      }
+
+      // Run initialization after the DOM is fully loaded.
+      document.addEventListener("DOMContentLoaded", initializeUI);
+    </script>
+  </body>
+</html>

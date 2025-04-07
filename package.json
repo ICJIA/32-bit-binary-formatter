@@ -1,0 +1,26 @@
+{
+    "name": "binary-formatter",
+    "version": "1.0.0",
+    "description": "A web-based tool for formatting and visualizing 32-bit binary numbers",
+    "type": "module",
+    "packageManager": "yarn@4.0.2",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "start": "yarn dev"
+    },
+    "dependencies": {
+        "inter-ui": "^4.1.0"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-legacy": "^5.0.0",
+        "terser": "^5.26.0",
+        "vite": "^5.0.0",
+        "vite-plugin-static-copy": "^1.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "yarn": ">=4.0.0"
+    }
+}
