@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Binary Formatter Demo (Comments + Dynamic Contrast)</title>
     <link rel="stylesheet" href="src/styles/main.css" />
+    <!-- Add Prism.js CSS -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app-container" role="main">
@@ -42,18 +47,21 @@
         </div>
 
         <div class="input-group">
-          <label for="textColorInput"
-            >Text Color (Non-Shaded / Dark Mode):</label
-          >
-          <div style="display: flex; align-items: center; gap: 0.5rem">
-            <input
-              type="color"
-              id="textColorInput"
-              aria-label="Choose text color"
-              aria-describedby="textColorValue"
-            />
-            <span id="textColorValue" class="color-value-display"></span>
-          </div>
+          <label for="textColorInput">Text Color:</label>
+          <select id="textColorInput" aria-label="Choose text color">
+            <optgroup label="Light Colors">
+              <option value="#FFFFFF">White</option>
+              <option value="#E2E8F0">Light Gray</option>
+              <option value="#EDF2F7">Light Blue Gray</option>
+              <option value="#F7FAFC">Off White</option>
+            </optgroup>
+            <optgroup label="Dark Colors">
+              <option value="#000000">Black</option>
+              <option value="#1A202C">Dark Gray</option>
+              <option value="#2D3748">Navy Gray</option>
+              <option value="#4A5568">Medium Gray</option>
+            </optgroup>
+          </select>
         </div>
       </div>
 
@@ -179,6 +187,161 @@
           <div id="output" aria-live="polite"></div>
         </div>
       </div>
+
+      <div class="real-world-example-container">
+        <h3>Real-World Example: Network Subnet Analysis</h3>
+        <p>
+          This example demonstrates how to use the binary formatter in a
+          practical networking context. The code analyzes subnet configurations
+          and provides detailed binary representations of network components.
+        </p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-title">Network Subnet Analysis</span>
+            <button class="copy-button" aria-label="Copy code to clipboard">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                ></path>
+              </svg>
+              Copy
+            </button>
+          </div>
+          <pre class="language-javascript"><code id="realWorldExample">/**
+ * Analyzes a network subnet configuration and provides detailed information
+ * about the subnet mask, network address, and available host addresses.
+ * 
+ * @param {number} ipAddress - The IP address in decimal format
+ * @param {number} subnetMask - The subnet mask in decimal format
+ * @returns {Object} Analysis results including binary representations
+ */
+function analyzeSubnet(ipAddress, subnetMask) {
+  // Format the IP address and subnet mask in binary
+  const ipBinary = formatBinary({ 
+    number: ipAddress,
+    textColor: "#FFFFFF",  // White text for dark mode
+    mode: "dark"
+  });
+  
+  const maskBinary = formatBinary({ 
+    number: subnetMask,
+    textColor: "#FFFFFF",
+    mode: "dark"
+  });
+
+  // Calculate network address (IP AND subnet mask)
+  const networkAddress = ipAddress & subnetMask;
+  const networkBinary = formatBinary({ 
+    number: networkAddress,
+    textColor: "#FFFFFF",
+    mode: "dark"
+  });
+
+  // Calculate broadcast address (network address OR inverted subnet mask)
+  const invertedMask = ~subnetMask >>> 0; // Convert to unsigned 32-bit
+  const broadcastAddress = networkAddress | invertedMask;
+  const broadcastBinary = formatBinary({ 
+    number: broadcastAddress,
+    textColor: "#FFFFFF",
+    mode: "dark"
+  });
+
+  // Calculate number of available host addresses
+  const numHosts = Math.pow(2, 32 - countSetBits(subnetMask)) - 2;
+
+  return {
+    ipAddress: {
+      decimal: ipAddress,
+      binary: ipBinary
+    },
+    subnetMask: {
+      decimal: subnetMask,
+      binary: maskBinary
+    },
+    networkAddress: {
+      decimal: networkAddress,
+      binary: networkBinary
+    },
+    broadcastAddress: {
+      decimal: broadcastAddress,
+      binary: broadcastBinary
+    },
+    numHosts: numHosts
+  };
+}
+
+/**
+ * Helper function to count the number of set bits in a number
+ * @param {number} num - The number to analyze
+ * @returns {number} Count of set bits
+ */
+function countSetBits(num) {
+  let count = 0;
+  while (num) {
+    count += num & 1;
+    num >>>= 1;
+  }
+  return count;
+}
+
+// Example usage:
+// IP Address Conversion:
+// 192.168.1.1 in decimal is converted to a single 32-bit number:
+// 192 * (256^3) + 168 * (256^2) + 1 * (256^1) + 1 * (256^0)
+// = 192 * 16,777,216 + 168 * 65,536 + 1 * 256 + 1 * 1
+// = 3,221,225,472 + 11,010,048 + 256 + 1
+// = 3,232,235,777
+const ipAddress = 3232235777;  // 192.168.1.1
+
+// Subnet Mask Conversion:
+// 255.255.255.0 in decimal is converted to a single 32-bit number:
+// 255 * (256^3) + 255 * (256^2) + 255 * (256^1) + 0 * (256^0)
+// = 255 * 16,777,216 + 255 * 65,536 + 255 * 256 + 0 * 1
+// = 4,278,190,080 + 16,711,680 + 65,280 + 0
+// = 4,294,967,040
+// This mask represents a /24 network (24 bits for network, 8 bits for hosts)
+const subnetMask = 4294967040; // 255.255.255.0
+
+// The subnet mask 255.255.255.0 is chosen because:
+// 1. It's a common subnet mask for small networks
+// 2. It provides 254 usable host addresses (2^8 - 2)
+// 3. It's easy to understand and visualize in binary
+// 4. It's commonly used in home and small office networks
+
+const subnetInfo = analyzeSubnet(ipAddress, subnetMask);
+
+console.log("Subnet Analysis Results:");
+// Subnet Analysis Results:
+
+console.log("IP Address:", subnetInfo.ipAddress.binary);
+// IP Address: 11000000 10101000 00000001 00000001
+
+console.log("Subnet Mask:", subnetInfo.subnetMask.binary);
+// Subnet Mask: 11111111 11111111 11111111 00000000
+
+console.log("Network Address:", subnetInfo.networkAddress.binary);
+// Network Address: 11000000 10101000 00000001 00000000
+
+console.log("Broadcast Address:", subnetInfo.broadcastAddress.binary);
+// Broadcast Address: 11000000 10101000 00000001 11111111
+
+console.log("Available Hosts:", subnetInfo.numHosts);
+// Available Hosts: 254</code></pre>
+        </div>
+      </div>
+
       <footer class="app-footer">
         <a
           href="https://github.com/ICJIA/32-bit-binary-formatter"
@@ -189,6 +352,9 @@
         </a>
       </footer>
     </div>
+    <!-- Add Prism.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script type="module">
       /**
        * Configuration object for binary formatting
@@ -439,7 +605,7 @@
         segmentColors: [null, null, null, null],
         textColor: document.body.classList.contains("light-mode")
           ? "#000000"
-          : "#e2e8f0",
+          : "#FFFFFF",
         mode: document.body.classList.contains("light-mode") ? "light" : "dark",
       };
 
@@ -472,11 +638,7 @@
             mode = DEFAULT_CONFIG.mode,
           } = fullConfig;
 
-          const baseTextColor =
-            textColor ||
-            getComputedStyle(document.body)
-              .getPropertyValue("--text-color")
-              .trim();
+          const baseTextColor = textColor;
           const baseTextLuminance = getLuminance(baseTextColor);
           const isBaseTextLight = baseTextLuminance > 0.5;
 
@@ -533,7 +695,6 @@
       const decimalInputElement = document.getElementById("decimalInput");
       const textColorInputElement = document.getElementById("textColorInput");
       const outputElement = document.getElementById("output");
-      const textColorValueElement = document.getElementById("textColorValue");
       const functionCallExampleElement = document.getElementById(
         "functionCallExample"
       );
@@ -642,7 +803,6 @@
         }
 
         const textColor = textColorInputElement.value;
-        textColorValueElement.textContent = textColor;
 
         const segmentHighlightIds = [];
         highlightEnableCheckboxes.forEach((checkbox) => {
@@ -689,12 +849,7 @@ const config = ${configString};
 // Function Call:
 const binaryString = formatBinary(config);
 
-// Real-world example: Checking if a number is a power of 2
-function isPowerOfTwo(number) {
-  const binary = formatBinary({ number });
-  // A power of 2 has exactly one '1' bit
-  return binary.match(/1/g).length === 1;
-}`;
+`;
 
         functionCallExampleElement.textContent = exampleCallString;
       }
@@ -726,7 +881,7 @@ function isPowerOfTwo(number) {
        */
       function applyTheme(isLight) {
         logger.info(`Applying theme: ${isLight ? "light" : "dark"}`);
-        const defaultTextColor = isLight ? "#000000" : "#e2e8f0";
+        const defaultTextColor = isLight ? "#000000" : "#FFFFFF";
         textColorInputElement.value = defaultTextColor;
 
         if (isLight) {
@@ -751,7 +906,7 @@ function isPowerOfTwo(number) {
       // Update output when number input changes
       decimalInputElement.addEventListener("input", updateOutput);
       // Update output when text color picker changes
-      textColorInputElement.addEventListener("input", updateOutput);
+      textColorInputElement.addEventListener("change", updateOutput);
 
       // Update output when highlight enable checkbox changes
       highlightEnableCheckboxes.forEach((checkbox) => {
@@ -814,8 +969,9 @@ function isPowerOfTwo(number) {
         const savedTheme = localStorage.getItem("theme");
         const prefersLight = savedTheme === "light";
         themeCheckbox.checked = prefersLight; // Set switch state
-        const initialTextColor = prefersLight ? "#000000" : "#e2e8f0";
-        textColorInputElement.value = initialTextColor; // Set color picker value
+        const initialTextColor = prefersLight ? "#000000" : "#FFFFFF";
+        textColorInputElement.value = initialTextColor; // Set default text color
+
         // Apply theme class and label
         if (prefersLight) {
           document.body.classList.add("light-mode");
@@ -831,6 +987,34 @@ function isPowerOfTwo(number) {
 
       // Run initialization after the DOM is fully loaded.
       document.addEventListener("DOMContentLoaded", initializeUI);
+
+      // Add copy button functionality
+      const copyButton = document.querySelector(".copy-button");
+      const realWorldExample = document.getElementById("realWorldExample");
+
+      copyButton.addEventListener("click", () => {
+        const text = realWorldExample.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          copyButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Copied!
+          `;
+          setTimeout(() => {
+            copyButton.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy
+            `;
+          }, 2000);
+        });
+      });
+
+      // Initialize Prism.js highlighting
+      Prism.highlightAll();
     </script>
   </body>
 </html>

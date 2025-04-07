@@ -16,7 +16,7 @@ A web-based tool for formatting and visualizing 32-bit binary numbers with custo
 
 1. Enter a decimal number between 0 and 4,294,967,295
 2. Customize the appearance:
-   - Select text color using the color picker
+   - Select text color from the dropdown menu
    - Enable/disable segment highlighting
    - Choose highlight colors from preset palettes
 3. Toggle between light and dark themes using the theme switch
