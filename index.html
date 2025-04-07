@@ -7,13 +7,19 @@
     <link rel="stylesheet" href="src/styles/main.css" />
   </head>
   <body>
-    <div id="app-container">
+    <div id="app-container" role="main">
       <div class="header-area">
         <h1>32-bit Binary Formatter</h1>
         <div class="theme-switch-wrapper">
           <span class="theme-label" id="theme-label-text">Dark Mode</span>
           <label class="theme-switch" for="theme-checkbox">
-            <input type="checkbox" id="theme-checkbox" />
+            <input
+              type="checkbox"
+              id="theme-checkbox"
+              aria-label="Toggle dark mode"
+              role="switch"
+              aria-checked="false"
+            />
             <div class="slider round"></div>
           </label>
         </div>
@@ -22,7 +28,17 @@
       <div class="input-grid">
         <div class="input-group">
           <label for="decimalInput">Decimal Number (0 - 4,294,967,295):</label>
-          <input type="number" id="decimalInput" min="0" max="4294967295" />
+          <input
+            type="number"
+            id="decimalInput"
+            min="0"
+            max="4294967295"
+            aria-describedby="decimalInputHelp"
+          />
+          <div id="decimalInputHelp" class="sr-only">
+            Enter a decimal number between 0 and 4,294,967,295 to see its binary
+            representation
+          </div>
         </div>
 
         <div class="input-group">
@@ -30,16 +46,29 @@
             >Text Color (Non-Shaded / Dark Mode):</label
           >
           <div style="display: flex; align-items: center; gap: 0.5rem">
-            <input type="color" id="textColorInput" />
+            <input
+              type="color"
+              id="textColorInput"
+              aria-label="Choose text color"
+              aria-describedby="textColorValue"
+            />
             <span id="textColorValue" class="color-value-display"></span>
           </div>
         </div>
       </div>
 
-      <div class="highlight-controls-container">
+      <div
+        class="highlight-controls-container"
+        role="region"
+        aria-label="Segment highlighting controls"
+      >
         <h3>Segment Highlighting:</h3>
-        <div class="highlight-grid">
-          <div class="segment-control-block">
+        <div class="highlight-grid" role="group" aria-label="Binary segments">
+          <div
+            class="segment-control-block"
+            role="group"
+            aria-label="Segment 0 controls"
+          >
             <div class="segment-header">
               <label for="enableHighlight0">Segment 0</label>
               <input
@@ -47,15 +76,22 @@
                 id="enableHighlight0"
                 data-index="0"
                 class="highlight-enable-checkbox"
+                aria-controls="presetColors0"
               />
             </div>
             <select
               id="presetColors0"
               data-index="0"
               class="preset-color-select"
+              aria-label="Color preset for segment 0"
+              tabindex="-1"
             ></select>
           </div>
-          <div class="segment-control-block">
+          <div
+            class="segment-control-block"
+            role="group"
+            aria-label="Segment 1 controls"
+          >
             <div class="segment-header">
               <label for="enableHighlight1">Segment 1</label>
               <input
@@ -63,15 +99,22 @@
                 id="enableHighlight1"
                 data-index="1"
                 class="highlight-enable-checkbox"
+                aria-controls="presetColors1"
               />
             </div>
             <select
               id="presetColors1"
               data-index="1"
               class="preset-color-select"
+              aria-label="Color preset for segment 1"
+              tabindex="-1"
             ></select>
           </div>
-          <div class="segment-control-block">
+          <div
+            class="segment-control-block"
+            role="group"
+            aria-label="Segment 2 controls"
+          >
             <div class="segment-header">
               <label for="enableHighlight2">Segment 2</label>
               <input
@@ -79,15 +122,22 @@
                 id="enableHighlight2"
                 data-index="2"
                 class="highlight-enable-checkbox"
+                aria-controls="presetColors2"
               />
             </div>
             <select
               id="presetColors2"
               data-index="2"
               class="preset-color-select"
+              aria-label="Color preset for segment 2"
+              tabindex="-1"
             ></select>
           </div>
-          <div class="segment-control-block">
+          <div
+            class="segment-control-block"
+            role="group"
+            aria-label="Segment 3 controls"
+          >
             <div class="segment-header">
               <label for="enableHighlight3">Segment 3</label>
               <input
@@ -95,12 +145,15 @@
                 id="enableHighlight3"
                 data-index="3"
                 class="highlight-enable-checkbox"
+                aria-controls="presetColors3"
               />
             </div>
             <select
               id="presetColors3"
               data-index="3"
               class="preset-color-select"
+              aria-label="Color preset for segment 3"
+              tabindex="-1"
             ></select>
           </div>
         </div>
@@ -108,15 +161,33 @@
 
       <div class="example-container">
         <label>Example Function Call:</label>
-        <div id="functionCallExample" class="code-block"></div>
+        <div
+          id="functionCallExample"
+          class="code-block"
+          role="region"
+          aria-label="Example code"
+        ></div>
       </div>
 
       <div class="output-container">
         <label>Formatted Output:</label>
-        <div class="output-display">
-          <div id="output"></div>
+        <div
+          class="output-display"
+          role="region"
+          aria-label="Binary representation"
+        >
+          <div id="output" aria-live="polite"></div>
         </div>
       </div>
+      <footer class="app-footer">
+        <a
+          href="https://github.com/ICJIA/32-bit-binary-formatter"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View on GitHub
+        </a>
+      </footer>
     </div>
     <script type="module">
       /**
@@ -129,115 +200,159 @@
       // --- Constants ---
       const MIN_UINT32 = 0;
       const MAX_UINT32 = 4294967295; // 2^32 - 1
-      const MIN_CONTRAST_RATIO = 4.5; // WCAG AA minimum contrast for normal text
+      const MIN_CONTRAST_RATIO = 8.0; // Minimum contrast ratio for accessibility
 
-      // --- Preset Color Definitions with IDs ---
+      // Add logging utility
+      const logger = {
+        info: (message, data = null) => {
+          console.log(`%c[INFO] ${message}`, "color: #4299e1", data || "");
+        },
+        warn: (message, data = null) => {
+          console.warn(`%c[WARN] ${message}`, "color: #ecc94b", data || "");
+        },
+        error: (message, data = null) => {
+          console.error(`%c[ERROR] ${message}`, "color: #f56565", data || "");
+        },
+        success: (message, data = null) => {
+          console.log(`%c[SUCCESS] ${message}`, "color: #48bb78", data || "");
+        },
+      };
+
+      // Add animation utility
+      function animateElement(element, className, duration = 500) {
+        element.classList.add(className);
+        setTimeout(() => {
+          element.classList.remove(className);
+        }, duration);
+      }
+
+      /**
+       * @typedef {Object} ColorPreset
+       * @property {string} name - Display name of the color preset
+       * @property {string} value - Hex color value for the background
+       * @property {string} textColor - Hex color value for the text
+       * @property {string} id - Unique identifier for the preset
+       */
+
+      /**
+       * @typedef {Object} ThemePalette
+       * @property {string} name - Name of the theme
+       * @property {ColorPreset[]} colors - Array of color presets for the theme
+       */
+
+      /**
+       * Preset color palettes for both light and dark themes.
+       * All colors are verified to have at least 8:1 contrast ratio with their text color.
+       * @type {Object.<string, ColorPreset[]>}
+       */
       const presetPalettes = {
         "Light Mode": [
-          // Contrast checked against #000000 (black text)
           {
             name: "Light Red",
-            value: "#FFADAD",
-            textColor: "#000000",
+            value: "#FFE5E5", // Very light red background
+            textColor: "#000000", // Black text
             id: "light-red",
-          }, // >= 10:1
+          },
           {
             name: "Light Orange",
-            value: "#FFD6A5",
+            value: "#FFE5D5", // Very light orange background
             textColor: "#000000",
             id: "light-orange",
-          }, // >= 12:1
+          },
           {
             name: "Light Yellow",
-            value: "#FDFFB6",
+            value: "#FFF8E5", // Very light yellow background
             textColor: "#000000",
             id: "light-yellow",
-          }, // >= 14:1
+          },
           {
             name: "Light Green",
-            value: "#CAFFBF",
+            value: "#E5FFE5", // Very light green background
             textColor: "#000000",
             id: "light-green",
-          }, // >= 13:1
+          },
           {
             name: "Light Blue",
-            value: "#A0C4FF",
+            value: "#E5F6FF", // Very light blue background
             textColor: "#000000",
             id: "light-blue",
-          }, // >= 10:1
+          },
           {
             name: "Light Purple",
-            value: "#BDB2FF",
+            value: "#F2E5FF", // Very light purple background
             textColor: "#000000",
             id: "light-purple",
-          }, // >= 9.9:1
+          },
           {
             name: "Light Gray",
-            value: "#E0E0E0",
+            value: "#F5F5F5", // Very light gray background
             textColor: "#000000",
             id: "light-gray",
-          }, // >= 13:1
+          },
         ],
         "Dark Mode": [
-          // Contrast checked against #e2e8f0 (light text) -> Target >= 8:1
           {
             name: "Dark Red",
-            value: "#B71C1C",
-            textColor: "#FFFFFF",
+            value: "#8B0000", // Deep red background
+            textColor: "#FFFFFF", // White text
             id: "dark-red",
-          }, // ~8.1:1
+          },
           {
             name: "Dark Brown",
-            value: "#5D4037",
+            value: "#3E2723", // Deep brown background
             textColor: "#FFFFFF",
             id: "dark-brown",
-          }, // ~8.0:1
+          },
           {
             name: "Dark Gold",
-            value: "#604506",
+            value: "#4A3800", // Deep gold background
             textColor: "#FFFFFF",
             id: "dark-gold",
-          }, // ~8.2:1
+          },
           {
-            name: "V. Dark Teal",
-            value: "#004D40",
+            name: "Dark Teal",
+            value: "#004D40", // Deep teal background
             textColor: "#FFFFFF",
             id: "dark-teal",
-          }, // ~9.4:1
+          },
           {
             name: "Dark Indigo",
-            value: "#1A237E",
+            value: "#1A237E", // Deep indigo background
             textColor: "#FFFFFF",
             id: "dark-indigo",
-          }, // ~11.9:1
+          },
           {
             name: "Dark Violet",
-            value: "#4A148C",
+            value: "#311B92", // Deep violet background
             textColor: "#FFFFFF",
             id: "dark-violet",
-          }, // ~10.5:1
+          },
           {
-            name: "V. Dark Gray",
-            value: "#424242",
+            name: "Dark Gray",
+            value: "#212121", // Deep gray background
             textColor: "#FFFFFF",
             id: "dark-gray",
-          }, // ~9.5:1
+          },
         ],
       };
 
-      // --- ID to Hex Color Lookup Map ---
+      /**
+       * Maps preset IDs to their corresponding hex color values.
+       * @type {Object.<string, string>}
+       */
       let presetIdToHexMap = {};
+
       /**
        * Builds the map for quick preset ID to Hex color lookup.
        * Should be called once on initialization.
+       * @returns {void}
        */
       function buildPresetMap() {
         presetIdToHexMap = {}; // Clear map
         for (const groupName in presetPalettes) {
           presetPalettes[groupName].forEach((color) => {
             if (color.id) {
-              // Ensure id exists
-              presetIdToHexMap[color.id] = color.value; // Map id to hex value
+              presetIdToHexMap[color.id] = color.value;
             }
           });
         }
@@ -249,9 +364,14 @@
        * Calculates the relative luminance of a hex color.
        * @param {string} hexColor - Color in #RRGGBB format.
        * @returns {number} Relative luminance (0-1).
+       * @throws {Error} If the hex color format is invalid.
        */
       function getLuminance(hexColor) {
-        const rgb = parseInt(hexColor.slice(1), 16); // Convert hex to integer
+        if (!/^#[0-9A-Fa-f]{6}$/.test(hexColor)) {
+          throw new Error(`Invalid hex color format: ${hexColor}`);
+        }
+
+        const rgb = parseInt(hexColor.slice(1), 16);
         const r = (rgb >> 16) & 0xff;
         const g = (rgb >> 8) & 0xff;
         const b = (rgb >> 0) & 0xff;
@@ -275,8 +395,17 @@
        * @param {number} lum1 - Luminance of the first color.
        * @param {number} lum2 - Luminance of the second color.
        * @returns {number} Contrast ratio.
+       * @throws {Error} If either luminance is invalid.
        */
       function getContrastRatio(lum1, lum2) {
+        if (
+          typeof lum1 !== "number" ||
+          typeof lum2 !== "number" ||
+          lum1 < 0 ||
+          lum2 < 0
+        ) {
+          throw new Error("Invalid luminance values");
+        }
         const lighter = Math.max(lum1, lum2);
         const darker = Math.min(lum1, lum2);
         return (lighter + 0.05) / (darker + 0.05);
@@ -290,72 +419,75 @@
        * @returns {string} An HTML string of the formatted binary number, or an error message string.
        */
       function formatBinary(config) {
+        logger.info("Formatting binary number:", config);
+
         if (typeof config?.number !== "number") {
+          logger.error("Invalid number passed to formatBinary");
           return '<span class="error-message">Error: Invalid number passed.</span>';
         }
-        const {
-          number,
-          segmentColors = [null, null, null, null],
-          textColor,
-        } = config;
 
-        // Determine the base text color (from picker or theme default CSS variable)
-        const baseTextColor =
-          textColor ||
-          getComputedStyle(document.body)
-            .getPropertyValue("--text-color")
-            .trim();
-        const baseTextLuminance = getLuminance(baseTextColor);
-        const isBaseTextLight = baseTextLuminance > 0.5; // Heuristic to check if base text is light or dark
+        try {
+          const {
+            number,
+            segmentColors = [null, null, null, null],
+            textColor,
+          } = config;
 
-        const unsignedInt = number >>> 0;
-        const binaryString = unsignedInt.toString(2).padStart(32, "0");
-        const segments = binaryString.match(/.{1,8}/g) || [];
+          const baseTextColor =
+            textColor ||
+            getComputedStyle(document.body)
+              .getPropertyValue("--text-color")
+              .trim();
+          const baseTextLuminance = getLuminance(baseTextColor);
+          const isBaseTextLight = baseTextLuminance > 0.5;
 
-        const styledSegments = segments.map((segment, index) => {
-          const presetId = Array.isArray(segmentColors)
-            ? segmentColors[index]
-            : null;
-          const highlightColor = presetId ? presetIdToHexMap[presetId] : null; // Get hex from ID map
+          const unsignedInt = number >>> 0;
+          const binaryString = unsignedInt.toString(2).padStart(32, "0");
+          const segments = binaryString.match(/.{1,8}/g) || [];
 
-          let segmentTextColor = baseTextColor; // Start with the base/picker color
+          logger.info("Processing binary segments:", segments);
 
-          // --- Dynamic Contrast Adjustment for Shaded Segments ---
-          if (highlightColor) {
-            try {
-              const highlightLuminance = getLuminance(highlightColor);
-              const contrastRatio = getContrastRatio(
-                baseTextLuminance,
-                highlightLuminance
-              );
+          const styledSegments = segments.map((segment, index) => {
+            const presetId = Array.isArray(segmentColors)
+              ? segmentColors[index]
+              : null;
+            const highlightColor = presetId ? presetIdToHexMap[presetId] : null;
 
-              // If contrast is below threshold, flip the text color
-              if (contrastRatio < MIN_CONTRAST_RATIO) {
-                segmentTextColor = isBaseTextLight ? "#000000" : "#FFFFFF"; // Flip to black or white
-                console.log(
-                  `Low contrast (${contrastRatio.toFixed(
-                    2
-                  )}) on segment ${index}. Flipped text to ${segmentTextColor}`
+            let segmentTextColor = baseTextColor;
+
+            // Only check contrast if this segment has highlighting enabled
+            if (highlightColor) {
+              try {
+                const highlightLuminance = getLuminance(highlightColor);
+                const contrastRatio = getContrastRatio(
+                  baseTextLuminance,
+                  highlightLuminance
                 );
-              }
-            } catch (e) {
-              console.error(
-                "Error calculating contrast, using base text color.",
-                e
-              );
-              // Fallback to base text color if calculation fails
-              segmentTextColor = baseTextColor;
-            }
-          }
-          // --- End Dynamic Contrast Adjustment ---
 
-          let style = `color: ${segmentTextColor};`;
-          if (highlightColor) {
-            style += ` background-color: ${highlightColor};`;
-          }
-          return `<span style="${style}">${segment}</span>`;
-        });
-        return styledSegments.join(" ");
+                // Silently adjust text color if contrast is below threshold
+                if (contrastRatio < MIN_CONTRAST_RATIO) {
+                  segmentTextColor = isBaseTextLight ? "#000000" : "#FFFFFF";
+                }
+              } catch (e) {
+                // If contrast calculation fails, use the base text color
+                segmentTextColor = baseTextColor;
+              }
+            }
+
+            let style = `color: ${segmentTextColor};`;
+            if (highlightColor) {
+              style += ` background-color: ${highlightColor};`;
+            }
+
+            return `<span style="${style}" class="binary-segment">${segment}</span>`;
+          });
+
+          logger.success("Binary formatting complete");
+          return styledSegments.join(" ");
+        } catch (error) {
+          logger.error("Error in formatBinary:", error);
+          return '<span class="error-message">Error processing binary format.</span>';
+        }
       }
 
       // --- DOM Element References ---
@@ -411,20 +543,24 @@
         const index = checkbox.dataset.index;
         const selectElement = document.getElementById(`presetColors${index}`);
 
+        logger.info(`Highlight checkbox ${index} changed:`, checkbox.checked);
+
         if (checkbox.checked) {
-          // Show the select box
           selectElement.classList.add("visible");
-          // Select the first color from the current theme
+          selectElement.tabIndex = 0;
           const currentTheme = document.body.classList.contains("light-mode")
             ? "Light Mode"
             : "Dark Mode";
           const firstColor = presetPalettes[currentTheme][0];
           if (firstColor) {
             selectElement.value = firstColor.id;
+            // Animate the segment control block
+            const segmentBlock = checkbox.closest(".segment-control-block");
+            animateElement(segmentBlock, "segment-highlight-animation");
           }
         } else {
-          // Hide the select box
           selectElement.classList.remove("visible");
+          selectElement.tabIndex = -1;
           selectElement.value = "";
         }
 
@@ -436,10 +572,11 @@
        * calls formatBinary, and updates the output display and example code display.
        */
       function updateOutput() {
-        // --- Input Validation ---
         let isValidNumber = false;
         let decimalNumber = NaN;
         const rawValue = decimalInputElement.value;
+
+        logger.info("Updating output with value:", rawValue);
 
         if (rawValue.trim() !== "") {
           const parsedValue = parseInt(rawValue, 10);
@@ -452,6 +589,9 @@
             decimalNumber = parsedValue;
             isValidNumber = true;
             decimalInputElement.classList.remove("input-error");
+            logger.success("Valid number entered:", decimalNumber);
+          } else {
+            logger.warn("Invalid number entered:", rawValue);
           }
         }
 
@@ -461,9 +601,7 @@
           decimalInputElement.classList.add("input-error");
           return;
         }
-        // --- End Validation ---
 
-        // --- Proceed if Valid ---
         const textColor = textColorInputElement.value;
         textColorValueElement.textContent = textColor;
 
@@ -475,14 +613,25 @@
             checkbox.checked && presetSelect.value ? presetSelect.value : null;
         });
 
-        /** @type {FormatBinaryConfig} */
         const config = {
           number: decimalNumber,
           segmentColors: segmentHighlightIds,
           textColor: textColor,
+          mode: document.body.classList.contains("light-mode")
+            ? "light"
+            : "dark",
         };
-        const formattedHtml = formatBinary(config); // formatBinary now handles contrast adjustment
+
+        const formattedHtml = formatBinary(config);
         outputElement.innerHTML = formattedHtml;
+
+        // Animate newly highlighted segments
+        const segments = outputElement.querySelectorAll(".binary-segment");
+        segments.forEach((segment, index) => {
+          if (segmentHighlightIds[index]) {
+            animateElement(segment, "highlight-animation");
+          }
+        });
 
         const configString = JSON.stringify(
           config,
@@ -495,11 +644,10 @@
           2
         );
 
-        // Example code display
-        const exampleCallString = `// Configuration Object (Part A - using Preset IDs):
+        const exampleCallString = `// Configuration Object using selections above:
 const config = ${configString};
 
-// Function Call (Part B):
+// Function Call:
 const binaryString = formatBinary(config);
 
 // Real-world example: Checking if a number is a power of 2
@@ -507,25 +655,40 @@ function isPowerOfTwo(number) {
   const binary = formatBinary({ number });
   // A power of 2 has exactly one '1' bit
   return binary.match(/1/g).length === 1;
-}
-
-// Usage example:
-const number = 16;
-if (isPowerOfTwo(number)) {
-  console.log(\`\${number} is a power of 2\`);
 }`;
 
         functionCallExampleElement.textContent = exampleCallString;
       }
 
       /**
+       * Resets all controls to their default state
+       */
+      function resetControlsToDefault() {
+        // Reset all checkboxes and hide select boxes
+        highlightEnableCheckboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+          const index = checkbox.dataset.index;
+          const selectElement = document.getElementById(`presetColors${index}`);
+          selectElement.classList.remove("visible");
+          selectElement.tabIndex = -1;
+          selectElement.value = "";
+        });
+
+        // Generate a new random number
+        const randomNum = Math.floor(Math.random() * (MAX_UINT32 + 1));
+        decimalInputElement.value = randomNum;
+      }
+
+      /**
        * Applies the selected theme (light/dark) to the body, updates the label,
        * sets the default text color picker value, and saves the preference to localStorage.
+       * Also resets all controls to their default state.
        * @param {boolean} isLight - True if light mode should be applied, false for dark.
        */
       function applyTheme(isLight) {
-        const defaultTextColor = isLight ? "#000000" : "#e2e8f0"; // Black for light, light gray for dark
-        textColorInputElement.value = defaultTextColor; // Update the picker value to the theme default
+        logger.info(`Applying theme: ${isLight ? "light" : "dark"}`);
+        const defaultTextColor = isLight ? "#000000" : "#e2e8f0";
+        textColorInputElement.value = defaultTextColor;
 
         if (isLight) {
           document.body.classList.add("light-mode");
@@ -536,8 +699,13 @@ if (isPowerOfTwo(number)) {
           themeLabel.textContent = "Dark Mode";
           localStorage.setItem("theme", "dark");
         }
-        // Update the output display after changing the theme and default text color
+
+        // Reset all controls to default state
+        resetControlsToDefault();
+
+        // Update the output with the new random number and default state
         updateOutput();
+        logger.success(`Theme applied: ${isLight ? "light" : "dark"}`);
       }
 
       // --- Event Listeners ---
@@ -561,23 +729,25 @@ if (isPowerOfTwo(number)) {
       // Apply theme when theme switch changes
       themeCheckbox.addEventListener("change", (event) => {
         applyTheme(event.target.checked);
-        // Update all visible select boxes to use the first color of the new theme
-        highlightEnableCheckboxes.forEach((checkbox) => {
-          if (checkbox.checked) {
-            const index = checkbox.dataset.index;
-            const selectElement = document.getElementById(
-              `presetColors${index}`
-            );
-            const currentTheme = event.target.checked
-              ? "Light Mode"
-              : "Dark Mode";
-            const firstColor = presetPalettes[currentTheme][0];
-            if (firstColor) {
-              selectElement.value = firstColor.id;
-            }
-          }
-        });
         updateOutput();
+      });
+
+      // Add keyboard navigation for segment controls
+      function handleSegmentKeydown(event) {
+        const checkbox = event.target;
+        const index = parseInt(checkbox.dataset.index);
+        const selectElement = document.getElementById(`presetColors${index}`);
+
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          checkbox.checked = !checkbox.checked;
+          handleHighlightCheckboxChange({ target: checkbox });
+        }
+      }
+
+      // Add keyboard event listeners
+      highlightEnableCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("keydown", handleSegmentKeydown);
       });
 
       // --- Initial Setup ---

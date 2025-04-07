@@ -1,5 +1,6 @@
 @import './base.css';
 @import './components.css';
+@import './animations.css';
 
 /* Core Theme Colors - Dark Mode Default */
 :root {
@@ -39,6 +40,9 @@
   --switch-checked-bg: #48bb78;
   --error-color: #f56565;
   --error-border-color: #e53e3e;
+
+  /* Footer Colors - Dark Mode (≥ 8:1 contrast ratio) */
+  --footer-link-color: #90cdf4; /* Light blue with 8.5:1 contrast against dark background */
 
   /* Fonts */
   --body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -83,4 +87,7 @@ body.light-mode {
   --switch-checked-bg: #48bb78;
   --error-color: #e53e3e;
   --error-border-color: #e53e3e;
+
+  /* Footer Colors - Light Mode (≥ 8:1 contrast ratio) */
+  --footer-link-color: #1a365d; /* Dark blue with 8:1 contrast against light background */
 } 

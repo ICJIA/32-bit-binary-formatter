@@ -6,10 +6,11 @@ A web-based tool for formatting and visualizing 32-bit binary numbers with custo
 
 - Convert decimal numbers (0-4,294,967,295) to 32-bit binary representation
 - Customize text color and segment highlighting
-- Dynamic contrast adjustment for optimal readability
+- Dynamic contrast adjustment for optimal readability (≥ 8:1 ratio)
 - Light/dark theme support with persistence
 - Responsive design
 - Example function call generation
+- Modern development setup with Vite and Yarn
 
 ## Usage
 
@@ -19,6 +20,8 @@ A web-based tool for formatting and visualizing 32-bit binary numbers with custo
    - Enable/disable segment highlighting
    - Choose highlight colors from preset palettes
 3. Toggle between light and dark themes using the theme switch
+
+## Demo
 
 ## Technical Details
 
@@ -59,6 +62,37 @@ The formatter accepts a configuration object with the following structure:
    yarn dev
    ```
 
+## Planned Improvements
+
+### Accessibility
+
+- [ ] ARIA labels for color inputs
+- [ ] Keyboard navigation for segment controls
+- [ ] Screen reader descriptions for binary output
+- [ ] Improved focus management
+
+### Performance
+
+- [ ] Input handler debouncing
+- [ ] Color contrast calculation memoization
+- [ ] Theme preference caching
+
+### Features
+
+- [ ] Copy-to-clipboard functionality
+- [ ] Animation transitions for theme changes
+- [ ] Color contrast information tooltips
+- [ ] TypeScript support
+- [ ] Additional number formats (hex, octal)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Repository
+
+View the project on GitHub: [ICJIA/32-bit-binary-formatter](https://github.com/ICJIA/32-bit-binary-formatter)
