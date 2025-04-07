@@ -191,10 +191,29 @@
     </div>
     <script type="module">
       /**
-       * @typedef {object} FormatBinaryConfig Configuration for formatting the binary number.
-       * @property {number} number - The decimal number to convert (required).
-       * @property {(string|null)[]} [segmentColors=[null, null, null, null]] - Array of 4 preset IDs (or null) indicating highlight color.
-       * @property {string} textColor - CSS color string for the binary digits (used as base, may be overridden for contrast).
+       * Configuration object for binary formatting
+       * @typedef {Object} FormatBinaryConfig
+       * @property {number} [number=0] - The decimal number to convert (0 to 4,294,967,295)
+       * @property {(string|null)[]} [segmentColors=[null, null, null, null]] - Array of 4 preset IDs or null values for segment highlighting
+       * @property {string} [textColor="#000000"] - Hex color code for text in light mode, "#e2e8f0" in dark mode
+       * @property {('light'|'dark')} [mode="dark"] - Current theme mode
+       *
+       * @example
+       * // Default config object:
+       * const defaultConfig = {
+       *   number: 0,
+       *   segmentColors: [null, null, null, null],
+       *   textColor: "#e2e8f0", // Default for dark mode
+       *   mode: "dark"
+       * };
+       *
+       * // Example custom config:
+       * const customConfig = {
+       *   number: 123456789,
+       *   segmentColors: ["light-red", null, "dark-blue", null],
+       *   textColor: "#000000",
+       *   mode: "light"
+       * };
        */
 
       // --- Constants ---
@@ -412,26 +431,46 @@
       }
 
       /**
+       * Default configuration values
+       * @type {FormatBinaryConfig}
+       */
+      const DEFAULT_CONFIG = {
+        number: 0,
+        segmentColors: [null, null, null, null],
+        textColor: document.body.classList.contains("light-mode")
+          ? "#000000"
+          : "#e2e8f0",
+        mode: document.body.classList.contains("light-mode") ? "light" : "dark",
+      };
+
+      /**
        * Converts a decimal number to a 32-bit binary string based on a config object.
        * Uses preset IDs for segment colors and looks up the hex value.
        * Dynamically adjusts text color on shaded segments for better contrast if needed.
-       * @param {FormatBinaryConfig} config - The configuration object.
-       * @returns {string} An HTML string of the formatted binary number, or an error message string.
+       * @param {Partial<FormatBinaryConfig>} config - The configuration object (partial)
+       * @returns {string} An HTML string of the formatted binary number, or an error message string
        */
-      function formatBinary(config) {
-        logger.info("Formatting binary number:", config);
+      function formatBinary(config = {}) {
+        // Merge provided config with defaults
+        const fullConfig = {
+          ...DEFAULT_CONFIG,
+          ...config,
+        };
 
-        if (typeof config?.number !== "number") {
-          logger.error("Invalid number passed to formatBinary");
+        logger.info("Formatting binary number with config:", fullConfig);
+
+        if (typeof fullConfig.number !== "number") {
+          logger.error("Invalid number in config");
           return '<span class="error-message">Error: Invalid number passed.</span>';
         }
 
         try {
           const {
             number,
-            segmentColors = [null, null, null, null],
-            textColor,
-          } = config;
+            segmentColors = DEFAULT_CONFIG.segmentColors,
+            textColor = DEFAULT_CONFIG.textColor,
+            mode = DEFAULT_CONFIG.mode,
+          } = fullConfig;
 
           const baseTextColor =
             textColor ||
