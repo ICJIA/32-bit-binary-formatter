@@ -24,16 +24,16 @@ A web-based tool for formatting and visualizing 32-bit binary numbers with custo
 
 ### Color Contrast
 
-The application automatically adjusts text color in highlighted segments to maintain WCAG AA minimum contrast ratio (4.5:1) for normal text. This ensures readability regardless of the chosen highlight colors.
+The application automatically adjusts text color in highlighted segments to maintain a high contrast ratio of at least 8:1 for all text. This exceeds WCAG AAA requirements and ensures excellent readability regardless of the chosen highlight colors.
 
 ### Preset Color Palettes
 
 Two sets of preset colors are available:
 
-- Light Mode: Optimized for dark text on light backgrounds
-- Dark Mode: Optimized for light text on dark backgrounds
+- Light Mode: Optimized for dark text on light backgrounds (contrast ratio ≥ 8:1)
+- Dark Mode: Optimized for light text on dark backgrounds (contrast ratio ≥ 8:1)
 
-Each preset color has been tested for contrast compliance.
+Each preset color has been carefully selected and tested for contrast compliance.
 
 ### Configuration Object
 
@@ -47,30 +47,18 @@ The formatter accepts a configuration object with the following structure:
 }
 ```
 
-## Browser Support
-
-The application is compatible with modern browsers that support:
-
-- CSS Custom Properties (Variables)
-- ES6+ JavaScript features
-- HTML5 input types (color, number)
-
-## Development
-
-This is a static web application requiring no build step. Simply serve the files through a web server.
-
 ### Local Development
 
 1. Clone the repository
-2. Serve the files using your preferred method:
-   - Python: `python -m http.server`
-   - Node.js: `npx serve`
-   - VS Code Live Server extension
+2. Install dependencies:
+   ```bash
+   yarn install
+   ```
+3. Start the development server:
+   ```bash
+   yarn dev
+   ```
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
