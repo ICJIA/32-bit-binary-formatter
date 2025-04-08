@@ -1,6 +1,6 @@
 # 32-bit Binary Formatter
 
-A web-based tool for formatting and visualizing 32-bit binary numbers with customizable highlighting and dynamic contrast adjustment.
+POC test for formatting and visualizing 32-bit binary numbers with customizable highlighting and dynamic contrast adjustment.
 
 ## Features
 
@@ -22,6 +22,8 @@ A web-based tool for formatting and visualizing 32-bit binary numbers with custo
 3. Toggle between light and dark themes using the theme switch
 
 ## Demo
+
+https://binary-formatter.netlify.app/
 
 ## Technical Details
 
