@@ -46,9 +46,10 @@ The formatter accepts a configuration object with the following structure:
 
 ```javascript
 {
-  number: number,                    // Required: Decimal number to convert
-  segmentColors: [string|null, ...], // Optional: Array of 4 preset IDs or null
-  textColor: string                  // Optional: CSS color string for binary digits
+  number: number,                    // Required: Decimal number to convert (0 to 4,294,967,295)
+  segmentColors: [string|null, ...], // Optional: Array of 4 preset IDs or null values for segment highlighting
+  textColor: string,                 // Optional: CSS color string for binary digits
+  mode: 'light' | 'dark'             // Optional: Current theme mode
 }
 ```
 
